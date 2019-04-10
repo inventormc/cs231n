@@ -29,7 +29,29 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  num_training = X.shape[0]
+  num_classes = W.shape[1]
+  loss = 0.0
+
+  for i in range(num_training):
+      scores = X[i].dot(W)
+      scores += -1*np.max(scores)
+      denom =  np.sum(np.exp(scores))
+      dW[:,y[i]] += -1 * (denom - np.exp(scores[y[i]]))/denom * X[i]
+      for j in range(num_classes):
+        if j != y[i]:
+          dW[:, j] += np.exp(scores[j]) / denom * X[i]
+      loss -= np.log(np.exp(scores[y[i]])/denom)
+
+
+
+  loss /= num_training
+  dW /= num_training
+  loss += reg * np.sum(W*W)
+  dW += 2 * reg * W
+
+
+
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
@@ -47,13 +69,26 @@ def softmax_loss_vectorized(W, X, y, reg):
   loss = 0.0
   dW = np.zeros_like(W)
 
+  num_training = X.shape[0]
+  num_classes = W.shape[1]
   #############################################################################
   # TODO: Compute the softmax loss and its gradient using no explicit loops.  #
   # Store the loss in loss and the gradient in dW. If you are not careful     #
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  scores = X.dot(W)
+  scores -= np.amax(scores, axis=1).reshape(num_training, -1)
+  denoms = np.sum(np.exp(scores), axis=1)
+  nums = np.exp(scores[list(range(num_training)), y])
+
+  loss = np.sum(-np.log(nums/denoms))/num_training + reg * np.sum(W*W)
+
+  s = np.divide(np.exp(scores), denoms.reshape(num_training, -1))
+  s[list(range(num_training)), y] = - (denoms - nums) / denoms
+  dW = X.T.dot(s)
+  dW /= num_training
+  dW += 2 * reg * W
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
